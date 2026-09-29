@@ -112,21 +112,26 @@ export const healthRoutes: FastifyPluginAsync = async (
     const temporalAddress = process.env.TEMPORAL_ADDRESS || "localhost:7233";
     dependencies.temporal = await checkTcp(temporalAddress);
 
-    // 4. MinIO check
-    const s3Endpoint = process.env.S3_ENDPOINT || "http://localhost:9000";
+    // 4. S3 / MinIO storage probe
+    const s3Endpoint = process.env.S3_ENDPOINT || 'http://localhost:9000';
     const s3Start = performance.now();
     try {
-      const minioHealthUrl = `${s3Endpoint.replace(/\/$/, "")}/minio/health/live`;
-      const res = await fetch(minioHealthUrl, {
-        signal: AbortSignal.timeout(1500),
-      });
-      dependencies.minio = {
-        status: res.ok ? "up" : "down",
+      // First try root endpoint (works for S3Mock and S3 gateways)
+      let res = await fetch(s3Endpoint, { signal: AbortSignal.timeout(1500) });
+      if (!res.ok) {
+        // Fallback to minio health endpoint if root didn't respond ok
+        const minioHealthUrl = `${s3Endpoint.replace(/\/$/, '')}/minio/health/live`;
+        res = await fetch(minioHealthUrl, { signal: AbortSignal.timeout(1500) });
+      }
+      // Any response (200, 403, 400) indicates the S3 HTTP service is alive and listening
+      const isUp = res.ok || res.status === 403 || res.status === 400;
+      dependencies.s3 = {
+        status: isUp ? 'up' : 'down',
         latencyMs: Math.round(performance.now() - s3Start),
       };
     } catch (err) {
-      dependencies.minio = {
-        status: "down",
+      dependencies.s3 = {
+        status: 'down',
         latencyMs: Math.round(performance.now() - s3Start),
         error: (err as Error).message,
       };
