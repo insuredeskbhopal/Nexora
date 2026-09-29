@@ -3,6 +3,9 @@ import {
   validateWorkflow,
   analyzeWorkflowRisk,
   computeWorkflowDiff,
+  generateIdempotencyKey,
+  classifyError,
+  evaluateRetry,
 } from './index.js';
 import type { WorkflowDefinition } from '@agentic/schemas';
 
@@ -267,4 +270,52 @@ describe('@agentic/workflow-engine', () => {
       expect(diff.humanReadableSummary).toContain('Manager Review');
     });
   });
+
+  describe('Idempotency & Retry Engine', () => {
+    it('generates canonical composite idempotency key', () => {
+      const key = generateIdempotencyKey({
+        workspaceId: 'ws_1',
+        automationId: 'auto_2',
+        runId: 'run_3',
+        nodeId: 'node_4',
+        operation: 'charge_customer',
+      });
+      expect(key).toBe('idem:ws_1:auto_2:run_3:node_4:charge_customer');
+    });
+
+    it('classifies transient network errors and schedules exponential retry', () => {
+      const error = new Error('ECONNRESET: Connection reset by peer');
+      const classification = classifyError(error);
+      expect(classification).toBe('PROVIDER_OUTAGE');
+
+      const evaluation = evaluateRetry(
+        {
+          maxAttempts: 3,
+          initialDelayMs: 1000,
+          maxDelayMs: 10000,
+          backoffMultiplier: 2,
+          jitter: false,
+          retryableErrors: ['PROVIDER_OUTAGE'],
+          nonRetryableErrors: ['AUTHENTICATION'],
+        },
+        1,
+        error,
+      );
+
+      expect(evaluation.shouldRetry).toBe(true);
+      expect(evaluation.attempt).toBe(2);
+      expect(evaluation.delayMs).toBe(1000);
+    });
+
+    it('blocks immediate retries for non-retryable authentication errors', () => {
+      const error = new Error('Unauthorized: 401 Invalid API token');
+      const classification = classifyError(error);
+      expect(classification).toBe('AUTHENTICATION');
+
+      const evaluation = evaluateRetry(undefined, 1, error);
+      expect(evaluation.shouldRetry).toBe(false);
+      expect(evaluation.reason).toContain('non-retryable');
+    });
+  });
 });
+

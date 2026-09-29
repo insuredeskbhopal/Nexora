@@ -295,4 +295,177 @@ describe('Fastify API Application', () => {
       await app.close();
     });
   });
+
+  describe('Durable Execution Runtime, Timeline & Human-in-the-Loop Signals', () => {
+    it('executes a workflow with agent reasoning, pauses at approval, resumes on signal, and records full timeline', async () => {
+      const app = await buildApp();
+      const userToken = await createAuthToken(
+        { userId: 'usr_ops_lead', email: 'ops@example.com' },
+        config.JWT_SECRET,
+      );
+
+      // 1. Create workspace
+      const wsRes = await app.inject({
+        method: 'POST',
+        url: '/v1/workspaces',
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: { name: 'Operations Center' },
+      });
+      const workspaceId = wsRes.json().workspace.id;
+
+      // 2. Create Automation
+      const autoRes = await app.inject({
+        method: 'POST',
+        url: `/v1/workspaces/${workspaceId}/automations`,
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: { name: 'Automated Purchase Approval' },
+      });
+      const automationId = autoRes.json().automation.id;
+
+      // 3. Define multi-step workflow with Human Approval
+      const pipelineAst = {
+        schemaVersion: '1.0.0',
+        name: 'Automated Purchase Approval',
+        description: 'Verifies purchase request, obtains approval, and posts purchase',
+        triggers: [
+          {
+            id: 'trig_po',
+            name: 'PO Webhook Trigger',
+            category: 'TRIGGER',
+            config: { type: 'webhook' },
+          },
+        ],
+        nodes: [
+          {
+            id: 'node_risk_check',
+            name: 'Risk Evaluation Agent',
+            category: 'AGENT',
+            config: { model: 'gemini-1.5-flash' },
+            timeoutMs: 15000,
+          },
+          {
+            id: 'node_approval_lead',
+            name: 'Team Lead Approval',
+            category: 'HUMAN_APPROVAL',
+            config: { approverRole: 'OWNER' },
+          },
+          {
+            id: 'node_issue_po',
+            name: 'Issue Purchase Order',
+            category: 'ACTION',
+            config: { action: 'issue_order' },
+          },
+        ],
+        edges: [
+          {
+            id: 'e1',
+            sourceNodeId: 'trig_po',
+            targetNodeId: 'node_risk_check',
+          },
+          {
+            id: 'e2',
+            sourceNodeId: 'node_risk_check',
+            targetNodeId: 'node_approval_lead',
+          },
+          {
+            id: 'e3',
+            sourceNodeId: 'node_approval_lead',
+            targetNodeId: 'node_issue_po',
+          },
+        ],
+        variables: {},
+        limits: {
+          maxExecutionTimeMs: 86400000,
+          maxSteps: 50,
+          maxCostUsd: 10,
+        },
+      };
+
+      await app.inject({
+        method: 'PUT',
+        url: `/v1/workspaces/${workspaceId}/automations/${automationId}/definition`,
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: pipelineAst,
+      });
+
+      await app.inject({
+        method: 'POST',
+        url: `/v1/workspaces/${workspaceId}/automations/${automationId}/publish`,
+        headers: { authorization: `Bearer ${userToken}` },
+      });
+
+      // 4. Trigger Run Execution
+      const triggerRes = await app.inject({
+        method: 'POST',
+        url: `/v1/workspaces/${workspaceId}/automations/${automationId}/runs`,
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: {
+          triggerType: 'WEBHOOK',
+          triggerPayload: { poId: 'PO-2026-001', vendor: 'Global Cloud Services', amount: 15000 },
+        },
+      });
+
+      expect(triggerRes.statusCode).toBe(201);
+      const runData = triggerRes.json().run;
+      const runId = runData.id;
+      // Workflow must pause at WAITING_FOR_APPROVAL
+      expect(runData.status).toBe('WAITING_FOR_APPROVAL');
+      expect(runData.pendingApprovalId).toBeDefined();
+
+      // 5. Query Run Details & Execution Timeline
+      const detailRes = await app.inject({
+        method: 'GET',
+        url: `/v1/workspaces/${workspaceId}/runs/${runId}`,
+        headers: { authorization: `Bearer ${userToken}` },
+      });
+
+      expect(detailRes.statusCode).toBe(200);
+      const detailBody = detailRes.json().run;
+      expect(detailBody.status).toBe('WAITING_FOR_APPROVAL');
+      expect(detailBody.timeline.length).toBeGreaterThanOrEqual(2);
+      expect(detailBody.approvals.length).toBe(1);
+      expect(detailBody.approvals[0].status).toBe('PENDING');
+
+      // 6. Approver submits APPROVAL Signal
+      const signalRes = await app.inject({
+        method: 'POST',
+        url: `/v1/workspaces/${workspaceId}/runs/${runId}/signals/approve`,
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: {
+          decision: 'APPROVE',
+          comments: 'Approved purchase budget for Q3',
+        },
+      });
+
+      expect(signalRes.statusCode).toBe(200);
+      const signalBody = signalRes.json();
+      expect(signalBody.status).toBe('COMPLETED');
+      expect(signalBody.decision).toBe('APPROVE');
+
+      // 7. Verify Completed State & Timeline after resumption
+      const finalRes = await app.inject({
+        method: 'GET',
+        url: `/v1/workspaces/${workspaceId}/runs/${runId}`,
+        headers: { authorization: `Bearer ${userToken}` },
+      });
+
+      const finalBody = finalRes.json().run;
+      expect(finalBody.status).toBe('COMPLETED');
+      expect(finalBody.timeline.some((s: any) => s.nodeId === 'node_issue_po' && s.status === 'COMPLETED')).toBe(true);
+
+      // 8. List Runs
+      const listRes = await app.inject({
+        method: 'GET',
+        url: `/v1/workspaces/${workspaceId}/runs`,
+        headers: { authorization: `Bearer ${userToken}` },
+      });
+
+      expect(listRes.statusCode).toBe(200);
+      const listBody = listRes.json();
+      expect(listBody.runs.length).toBeGreaterThanOrEqual(1);
+      expect(listBody.runs[0].status).toBe('COMPLETED');
+
+      await app.close();
+    });
+  });
 });

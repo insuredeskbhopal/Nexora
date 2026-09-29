@@ -535,6 +535,12 @@ importers:
 
   packages/workflow-engine:
     dependencies:
+      '@agentic/config':
+        specifier: workspace:*
+        version: link:../config
+      '@agentic/db':
+        specifier: workspace:*
+        version: link:../db
       '@agentic/logger':
         specifier: workspace:*
         version: link:../logger

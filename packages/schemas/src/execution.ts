@@ -57,3 +57,12 @@ export const retryRunSchema = z.object({
   overrideInputs: z.record(z.unknown()).optional(),
 });
 export type RetryRunInput = z.infer<typeof retryRunSchema>;
+
+export const queryRunsSchema = z.object({
+  automationId: z.string().optional(),
+  status: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+  cursor: z.string().optional(),
+});
+export type QueryRunsInput = z.infer<typeof queryRunsSchema>;
+

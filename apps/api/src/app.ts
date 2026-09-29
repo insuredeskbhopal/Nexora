@@ -8,6 +8,7 @@ import { errorHandler } from "./errors/errorHandler.js";
 import { healthRoutes } from "./modules/health/routes.js";
 import { workspaceRoutes } from "./modules/workspaces/routes.js";
 import { automationRoutes } from "./modules/automations/routes.js";
+import { runRoutes } from "./modules/runs/routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const rootLogger = createLogger({
@@ -78,6 +79,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(healthRoutes);
   await app.register(workspaceRoutes);
   await app.register(automationRoutes);
+  await app.register(runRoutes);
 
   return app;
 }
