@@ -9,6 +9,8 @@ import { healthRoutes } from "./modules/health/routes.js";
 import { workspaceRoutes } from "./modules/workspaces/routes.js";
 import { automationRoutes } from "./modules/automations/routes.js";
 import { runRoutes } from "./modules/runs/routes.js";
+import { connectorRoutes } from "./modules/connectors/routes.js";
+import { secretRoutes } from "./modules/secrets/routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const rootLogger = createLogger({
@@ -80,6 +82,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(workspaceRoutes);
   await app.register(automationRoutes);
   await app.register(runRoutes);
+  await app.register(connectorRoutes);
+  await app.register(secretRoutes);
 
   return app;
 }

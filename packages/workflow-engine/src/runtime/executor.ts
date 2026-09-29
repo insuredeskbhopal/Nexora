@@ -1,6 +1,8 @@
 import { prisma, type Prisma } from '@agentic/db';
 import { createLogger } from '@agentic/logger';
 import type { WorkflowDefinition, WorkflowNode, WorkflowEdge } from '@agentic/schemas';
+import { connectorRegistry } from '@agentic/connectors';
+import { decryptEnvelope } from '@agentic/crypto';
 import { checkIdempotency } from './idempotency.js';
 import { evaluateRetry } from './retryEngine.js';
 import { executeSagaCompensation } from './sagaCoordinator.js';
@@ -222,7 +224,7 @@ export class WorkflowExecutor {
       let nodeOutput: Record<string, unknown> = {};
 
       try {
-        nodeOutput = await this.executeNodeLogic(node, variables);
+        nodeOutput = await this.executeNodeLogic(node, variables, run.workspaceId, runId);
 
         // Record successful step completion
         await prisma.runStep.create({
@@ -391,7 +393,44 @@ export class WorkflowExecutor {
   private static async executeNodeLogic(
     node: WorkflowNode,
     variables: Record<string, unknown>,
+    workspaceId: string,
+    runId: string,
   ): Promise<Record<string, unknown>> {
+    // 1. Check if node is associated with a Connector
+    const connectorId = (node.config.connectorId as string) || (node.category === 'HTTP' ? 'http' : undefined);
+    const actionId = (node.config.actionId as string) || (node.config.action as string) || (connectorId === 'http' ? 'request' : undefined);
+
+    if (connectorId && actionId && connectorRegistry.has(connectorId)) {
+      const connector = connectorRegistry.get(connectorId)!;
+
+      // Decrypt credentials if connector account ID is provided
+      let credentials: Record<string, unknown> = {};
+      if (node.config.connectorAccountId) {
+        const account = await prisma.connectorAccount.findUnique({
+          where: { id: node.config.connectorAccountId as string },
+        });
+        if (account && account.workspaceId === workspaceId) {
+          try {
+            credentials = JSON.parse(decryptEnvelope(account.encryptedData));
+          } catch {
+            logger.warn({ accountId: account.id }, 'Failed to decrypt account credentials');
+          }
+        }
+      }
+
+      // Check idempotency for external action
+      const idempotencyKey = `${workspaceId}:${runId}:${node.id}:${actionId}`;
+
+      return connector.executeAction(actionId, {
+        workspaceId,
+        runId,
+        nodeId: node.id,
+        idempotencyKey,
+        credentials,
+        input: (node.config.input as Record<string, unknown>) || variables[node.id] || {},
+      });
+    }
+
     switch (node.category) {
       case 'TRIGGER':
         return { triggeredAt: new Date().toISOString(), ...variables };

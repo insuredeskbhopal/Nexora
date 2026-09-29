@@ -467,5 +467,135 @@ describe('Fastify API Application', () => {
 
       await app.close();
     });
+
+    it('should manage connectors, envelope-encrypted credentials and secrets securely', async () => {
+      const app = await buildApp();
+      const userToken = await createAuthToken(
+        { userId: 'usr_fintech_lead', email: 'fintech@example.com' },
+        config.JWT_SECRET,
+      );
+
+      // 1. Create Workspace
+      const wsRes = await app.inject({
+        method: 'POST',
+        url: '/v1/workspaces',
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: { name: 'Fintech Operations & Integrations' },
+      });
+      const workspaceId = wsRes.json().workspace.id;
+
+      // 2. Discover Connectors in Registry
+      const connListRes = await app.inject({
+        method: 'GET',
+        url: `/v1/workspaces/${workspaceId}/connectors`,
+        headers: { authorization: `Bearer ${userToken}` },
+      });
+      expect(connListRes.statusCode).toBe(200);
+      const connectors = connListRes.json().connectors;
+      expect(connectors.some((c: any) => c.id === 'slack')).toBe(true);
+      expect(connectors.some((c: any) => c.id === 'gmail')).toBe(true);
+      expect(connectors.some((c: any) => c.id === 'http')).toBe(true);
+
+      // 3. Connect Account with Envelope-Encrypted Credentials
+      const connectRes = await app.inject({
+        method: 'POST',
+        url: `/v1/workspaces/${workspaceId}/connectors/accounts`,
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: {
+          connectorId: 'slack',
+          name: 'Primary DevOps Slack Bot',
+          authType: 'BEARER',
+          credentials: {
+            token: 'xoxb-mock-secret-bot-token-987654321',
+          },
+        },
+      });
+      expect(connectRes.statusCode).toBe(201);
+      const accountId = connectRes.json().account.id;
+
+      // 4. Verify Account Listing Never Leaks Plaintext Credentials or Ciphertext
+      const accountsRes = await app.inject({
+        method: 'GET',
+        url: `/v1/workspaces/${workspaceId}/connectors/accounts`,
+        headers: { authorization: `Bearer ${userToken}` },
+      });
+      expect(accountsRes.statusCode).toBe(200);
+      const accounts = accountsRes.json().accounts;
+      expect(accounts.length).toBe(1);
+      expect(accounts[0].id).toBe(accountId);
+      expect(accounts[0].name).toBe('Primary DevOps Slack Bot');
+      expect((accounts[0] as any).encryptedData).toBeUndefined();
+      expect((accounts[0] as any).credentials).toBeUndefined();
+
+      // 5. Test Connector Connection (decrypts in memory safely)
+      const testRes = await app.inject({
+        method: 'POST',
+        url: `/v1/workspaces/${workspaceId}/connectors/accounts/${accountId}/test`,
+        headers: { authorization: `Bearer ${userToken}` },
+      });
+      expect(testRes.statusCode).toBe(200);
+      expect(testRes.json().testResult).toBeDefined();
+
+      // 6. Section 31: Auto-generate Private Connector from OpenAPI Specification
+      const generateRes = await app.inject({
+        method: 'POST',
+        url: `/v1/workspaces/${workspaceId}/connectors/generate`,
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: {
+          spec: {
+            openapi: '3.0.0',
+            info: {
+              title: 'Core Banking Ledger',
+              version: '1.0.0',
+              description: 'Internal private banking ledger API',
+            },
+            servers: [{ url: 'https://ledger.internal.bank/api' }],
+            paths: {
+              '/accounts/{id}/balance': {
+                get: {
+                  operationId: 'getBalance',
+                  summary: 'Get account balance',
+                },
+              },
+            },
+          },
+        },
+      });
+      expect(generateRes.statusCode).toBe(201);
+      const genConn = generateRes.json().connector;
+      expect(genConn.id).toBe('custom_core_banking_ledger');
+      expect(genConn.actions.length).toBe(1);
+      expect(genConn.actions[0].id).toBe('getBalance');
+
+      // 7. Manage Environment Secrets (Section 24 & 46)
+      const secretCreateRes = await app.inject({
+        method: 'POST',
+        url: `/v1/workspaces/${workspaceId}/secrets`,
+        headers: { authorization: `Bearer ${userToken}` },
+        payload: {
+          key: 'STRIPE_WEBHOOK_SECRET',
+          value: 'whsec_prod_live_key_998877665544332211',
+          environment: 'PRODUCTION',
+        },
+      });
+      expect(secretCreateRes.statusCode).toBe(201);
+      expect(secretCreateRes.json().secret.maskedValue).toContain('••••');
+      expect(secretCreateRes.json().secret.maskedValue).not.toBe('whsec_prod_live_key_998877665544332211');
+
+      // 8. List Environment Secrets (Masked Values Only)
+      const secretsListRes = await app.inject({
+        method: 'GET',
+        url: `/v1/workspaces/${workspaceId}/secrets?environment=PRODUCTION`,
+        headers: { authorization: `Bearer ${userToken}` },
+      });
+      expect(secretsListRes.statusCode).toBe(200);
+      const secrets = secretsListRes.json().secrets;
+      expect(secrets.length).toBe(1);
+      expect(secrets[0].key).toBe('STRIPE_WEBHOOK_SECRET');
+      expect(secrets[0].maskedValue).toBe('••••••••');
+
+      await app.close();
+    }, 15000);
   });
 });
+
