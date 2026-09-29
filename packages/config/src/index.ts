@@ -55,6 +55,9 @@ export const serverConfigSchema = z
     S3_SECRET_KEY: z.string().min(1, 'S3_SECRET_KEY is required'),
     S3_BUCKET: z.string().min(1, 'S3_BUCKET is required').default('agentic-artifacts'),
 
+    JWT_SECRET: z.string().min(16).default('nexora-production-jwt-signing-secret-default-key-32-chars'),
+    ENCRYPTION_MASTER_KEY: z.string().min(32).default('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+
     LOG_LEVEL: LogLevelEnum.default('info'),
   })
   .superRefine((data, ctx) => {
@@ -139,3 +142,5 @@ export function getConfig(): ServerConfig {
   }
   return cachedConfig;
 }
+
+export const config = getConfig();

@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '../generated/index.js';
+import { getConfig } from '@agentic/config';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -7,17 +8,22 @@ declare global {
 
 /**
  * Creates or retrieves the singleton PrismaClient instance.
+ * Strict Database Isolation: Always uses the verified DATABASE_URL from @agentic/config.
  */
 export function getPrismaClient(): PrismaClient {
-  if (process.env.NODE_ENV === "production") {
+  const config = getConfig();
+
+  if (process.env.NODE_ENV === 'production') {
     return new PrismaClient({
-      log: ["error", "warn"],
+      datasourceUrl: config.DATABASE_URL,
+      log: ['error', 'warn'],
     });
   }
 
   if (!globalThis.__prismaClientInstance) {
     globalThis.__prismaClientInstance = new PrismaClient({
-      log: ["error", "warn"],
+      datasourceUrl: config.DATABASE_URL,
+      log: ['error', 'warn'],
     });
   }
 
@@ -27,7 +33,7 @@ export function getPrismaClient(): PrismaClient {
 export const prisma = getPrismaClient();
 
 export interface DbHealthResult {
-  status: "up" | "down";
+  status: 'up' | 'down';
   latencyMs: number;
   error?: string;
 }
@@ -41,17 +47,17 @@ export async function checkDatabaseHealth(): Promise<DbHealthResult> {
     await prisma.$queryRaw`SELECT 1`;
     const latencyMs = Math.round(performance.now() - start);
     return {
-      status: "up",
+      status: 'up',
       latencyMs,
     };
   } catch (error) {
     const latencyMs = Math.round(performance.now() - start);
     return {
-      status: "down",
+      status: 'down',
       latencyMs,
       error: (error as Error).message,
     };
   }
 }
 
-export * from "@prisma/client";
+export * from '../generated/index.js';

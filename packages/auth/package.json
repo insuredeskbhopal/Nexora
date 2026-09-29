@@ -15,7 +15,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic/shared": "workspace:*"
+    "@agentic/config": "workspace:*",
+    "@agentic/db": "workspace:*",
+    "@agentic/shared": "workspace:*",
+    "jose": "^6.2.12"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",

@@ -1,90 +1,315 @@
-import { ForbiddenError, UnauthorizedError } from "@agentic/shared";
+import { ForbiddenError, UnauthorizedError } from '@agentic/shared';
+import type { PrismaClient, WorkspaceRole as PrismaWorkspaceRole } from '@agentic/db';
+import { SignJWT, jwtVerify } from 'jose';
 
-export type WorkspaceRole = "owner" | "admin" | "member" | "viewer";
+// Re-export role enum matching Prisma domain model
+export type WorkspaceRole = 'OWNER' | 'ADMIN' | 'AUTOMATION_DEVELOPER' | 'OPERATOR' | 'APPROVER' | 'VIEWER';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: Date;
-}
+export type WorkspacePermission =
+  // Workspaces
+  | 'workspace.manage'
+  | 'workspace.read'
+  | 'workspace.member.manage'
+  // Automations
+  | 'automation.create'
+  | 'automation.edit'
+  | 'automation.publish'
+  | 'automation.pause'
+  | 'automation.delete'
+  | 'automation.read'
+  // Runs
+  | 'run.view'
+  | 'run.start'
+  | 'run.retry'
+  | 'run.cancel'
+  // Connectors & Credentials
+  | 'connector.create'
+  | 'connector.use'
+  | 'connector.delete'
+  | 'credential.manage'
+  // Agents
+  | 'agent.create'
+  | 'agent.edit'
+  | 'agent.delete'
+  | 'agent.use'
+  // Approvals
+  | 'approval.decide'
+  | 'approval.view'
+  // Policies & Governance
+  | 'policy.manage'
+  | 'policy.view'
+  // Auditing & Billing
+  | 'audit.view'
+  | 'billing.view';
 
-export interface Workspace {
-  id: string;
-  name: string;
-  slug: string;
-  createdAt: Date;
-}
+/**
+ * Granular Role-to-Permissions Matrix
+ * Dictates strict zero-trust server-side access controls.
+ */
+export const ROLE_PERMISSIONS: Record<WorkspaceRole, readonly WorkspacePermission[]> = {
+  OWNER: [
+    'workspace.manage',
+    'workspace.read',
+    'workspace.member.manage',
+    'automation.create',
+    'automation.edit',
+    'automation.publish',
+    'automation.pause',
+    'automation.delete',
+    'automation.read',
+    'run.view',
+    'run.start',
+    'run.retry',
+    'run.cancel',
+    'connector.create',
+    'connector.use',
+    'connector.delete',
+    'credential.manage',
+    'agent.create',
+    'agent.edit',
+    'agent.delete',
+    'agent.use',
+    'approval.decide',
+    'approval.view',
+    'policy.manage',
+    'policy.view',
+    'audit.view',
+    'billing.view',
+  ],
+  ADMIN: [
+    'workspace.read',
+    'workspace.member.manage',
+    'automation.create',
+    'automation.edit',
+    'automation.publish',
+    'automation.pause',
+    'automation.delete',
+    'automation.read',
+    'run.view',
+    'run.start',
+    'run.retry',
+    'run.cancel',
+    'connector.create',
+    'connector.use',
+    'connector.delete',
+    'credential.manage',
+    'agent.create',
+    'agent.edit',
+    'agent.delete',
+    'agent.use',
+    'approval.decide',
+    'approval.view',
+    'policy.manage',
+    'policy.view',
+    'audit.view',
+    'billing.view',
+  ],
+  AUTOMATION_DEVELOPER: [
+    'workspace.read',
+    'automation.create',
+    'automation.edit',
+    'automation.publish',
+    'automation.pause',
+    'automation.delete',
+    'automation.read',
+    'run.view',
+    'run.start',
+    'run.retry',
+    'run.cancel',
+    'connector.create',
+    'connector.use',
+    'credential.manage',
+    'agent.create',
+    'agent.edit',
+    'agent.use',
+    'approval.view',
+    'policy.view',
+    'audit.view',
+  ],
+  OPERATOR: [
+    'workspace.read',
+    'automation.read',
+    'run.view',
+    'run.start',
+    'run.retry',
+    'run.cancel',
+    'connector.use',
+    'agent.use',
+    'approval.view',
+    'policy.view',
+    'audit.view',
+  ],
+  APPROVER: [
+    'workspace.read',
+    'automation.read',
+    'run.view',
+    'approval.decide',
+    'approval.view',
+    'policy.view',
+  ],
+  VIEWER: [
+    'workspace.read',
+    'automation.read',
+    'run.view',
+    'approval.view',
+    'policy.view',
+  ],
+} as const;
 
-export interface Membership {
-  id: string;
-  userId: string;
-  workspaceId: string;
-  role: WorkspaceRole;
-  createdAt: Date;
-}
-
-export interface Session {
-  id: string;
-  userId: string;
-  activeWorkspaceId: string;
-  expiresAt: Date;
+/**
+ * Checks if a given role possesses the specified permission.
+ */
+export function hasPermission(role: WorkspaceRole, permission: WorkspacePermission): boolean {
+  const allowed = ROLE_PERMISSIONS[role];
+  return allowed ? allowed.includes(permission) : false;
 }
 
 /**
- * Context passed into all tenant-scoped API handlers and workflow triggers.
+ * Checks if the role meets or exceeds a baseline role in the hierarchy.
  */
-export interface AuthContext {
-  user: User;
-  workspace: Workspace;
-  membership: Membership;
-}
-
-/**
- * Enforces that all database operations on domain entities are scoped to a workspaceId.
- */
-export interface WorkspaceScopedQuery {
-  workspaceId: string;
-}
-
 const ROLE_HIERARCHY: Record<WorkspaceRole, number> = {
-  viewer: 1,
-  member: 2,
-  admin: 3,
-  owner: 4,
+  VIEWER: 1,
+  APPROVER: 2,
+  OPERATOR: 3,
+  AUTOMATION_DEVELOPER: 4,
+  ADMIN: 5,
+  OWNER: 6,
 };
 
-/**
- * Verifies if the user's role satisfies the minimum required workspace role.
- */
-export function hasWorkspaceRole(
-  userRole: WorkspaceRole,
-  requiredRole: WorkspaceRole,
-): boolean {
+export function hasWorkspaceRole(userRole: WorkspaceRole, requiredRole: WorkspaceRole): boolean {
   return (ROLE_HIERARCHY[userRole] ?? 0) >= (ROLE_HIERARCHY[requiredRole] ?? 0);
 }
 
 /**
- * Guard that throws ForbiddenError if current membership lacks required role.
+ * Verified Tenancy Context returned after server-side authentication and membership validation.
  */
-export function requireWorkspaceRole(
-  membership: Membership,
-  requiredRole: WorkspaceRole,
-): void {
-  if (!hasWorkspaceRole(membership.role, requiredRole)) {
+export interface VerifiedTenancyContext {
+  userId: string;
+  userEmail: string;
+  userName: string;
+  workspaceId: string;
+  workspaceName: string;
+  workspaceSlug: string;
+  role: WorkspaceRole;
+  permissions: ReadonlySet<WorkspacePermission>;
+}
+
+/**
+ * STRICT SERVER-SIDE TENANCY VALIDATION
+ * Section 5: All tenant-owned entities must contain workspace_id or an equivalent verified tenancy boundary.
+ * Never trust a workspace_id coming directly from the client without validating membership server-side.
+ */
+export async function verifyWorkspaceAccess(
+  prismaClient: PrismaClient,
+  userId: string,
+  workspaceId: string,
+  requiredPermission?: WorkspacePermission,
+): Promise<VerifiedTenancyContext> {
+  if (!userId || !workspaceId) {
+    throw new UnauthorizedError('Both userId and workspaceId are required for tenancy verification');
+  }
+
+  const membership = await prismaClient.membership.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId,
+        userId,
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      },
+      workspace: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+    },
+  });
+
+  if (!membership) {
+    throw new ForbiddenError(`Access denied: User '${userId}' is not a member of workspace '${workspaceId}'.`);
+  }
+
+  const role = membership.role as WorkspaceRole;
+  const permissionsList = ROLE_PERMISSIONS[role] ?? [];
+  const permissionsSet = new Set<WorkspacePermission>(permissionsList);
+
+  if (requiredPermission && !permissionsSet.has(requiredPermission)) {
     throw new ForbiddenError(
-      `Insufficient permissions. Required role: ${requiredRole}, current role: ${membership.role}`,
+      `Insufficient permissions: Role '${role}' lacks required permission '${requiredPermission}'.`,
     );
+  }
+
+  return {
+    userId: membership.user.id,
+    userEmail: membership.user.email,
+    userName: membership.user.name,
+    workspaceId: membership.workspace.id,
+    workspaceName: membership.workspace.name,
+    workspaceSlug: membership.workspace.slug,
+    role,
+    permissions: permissionsSet,
+  };
+}
+
+/**
+ * JWT Authentication Token Generator
+ */
+export async function createAuthToken(
+  payload: { userId: string; email: string },
+  secret: string,
+  expiresIn = '7d',
+): Promise<string> {
+  const secretBytes = new TextEncoder().encode(secret);
+  return new SignJWT({ sub: payload.userId, email: payload.email })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+    .sign(secretBytes);
+}
+
+/**
+ * JWT Authentication Token Verifier
+ */
+export async function verifyAuthToken(
+  token: string,
+  secret: string,
+): Promise<{ userId: string; email: string }> {
+  try {
+    const secretBytes = new TextEncoder().encode(secret);
+    const { payload } = await jwtVerify(token, secretBytes, {
+      algorithms: ['HS256'],
+    });
+
+    if (!payload.sub || typeof payload.email !== 'string') {
+      throw new UnauthorizedError('Malformed authentication token payload');
+    }
+
+    return {
+      userId: payload.sub,
+      email: payload.email,
+    };
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      throw error;
+    }
+    throw new UnauthorizedError(`Invalid authentication token: ${(error as Error).message}`);
   }
 }
 
 /**
  * Guard that verifies authentication context exists.
  */
-export function requireAuth(
-  context?: AuthContext | null,
-): asserts context is AuthContext {
+export function requireAuth<T>(context?: T | null): asserts context is T {
   if (!context) {
-    throw new UnauthorizedError("Authentication required");
+    throw new UnauthorizedError('Authentication required');
   }
 }

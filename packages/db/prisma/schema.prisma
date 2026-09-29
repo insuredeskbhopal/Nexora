@@ -1,8 +1,9 @@
-// Prisma Schema for Agentic Platform Foundation
-// Phase 0: Foundational verification schema
+// Prisma Schema for Nexora Agentic Automation Platform
+// Production-grade Multi-Tenant Enterprise Model
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated"
 }
 
 datasource db {
@@ -10,8 +11,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================================================
+// SYSTEM VERIFICATION
+// ============================================================================
+
 model SystemHealth {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   component String   @unique
   status    String
   metadata  Json?
@@ -19,4 +24,391 @@ model SystemHealth {
   createdAt DateTime @default(now())
 
   @@map("system_health")
+}
+
+// ============================================================================
+// TENANCY & IDENTITY
+// ============================================================================
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  AUTOMATION_DEVELOPER
+  OPERATOR
+  APPROVER
+  VIEWER
+}
+
+model User {
+  id          String             @id @default(uuid())
+  email       String             @unique
+  name        String
+  avatarUrl   String?
+  memberships Membership[]
+  decisions   ApprovalDecision[]
+  auditLogs   AuditLog[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@map("users")
+}
+
+model Workspace {
+  id          String             @id @default(uuid())
+  name        String
+  slug        String             @unique
+  description String?
+  plan        String             @default("FREE")
+  active      Boolean            @default(true)
+  memberships Membership[]
+  automations Automation[]
+  agents      Agent[]
+  connectors  ConnectorAccount[]
+  secrets     Secret[]
+  runs        Run[]
+  approvals   Approval[]
+  policies    Policy[]
+  auditLogs   AuditLog[]
+  variables   Variable[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@map("workspaces")
+}
+
+model Membership {
+  id          String        @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(VIEWER)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+  @@map("memberships")
+}
+
+// ============================================================================
+// AUTOMATIONS & VERSIONING
+// ============================================================================
+
+enum AutomationStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+model Automation {
+  id              String              @id @default(uuid())
+  workspaceId     String
+  name            String
+  description     String?
+  status          AutomationStatus    @default(DRAFT)
+  activeVersionId String?             @unique
+  workspace       Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  activeVersion   AutomationVersion?  @relation("ActiveVersion", fields: [activeVersionId], references: [id])
+  versions        AutomationVersion[] @relation("AllVersions")
+  runs            Run[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([workspaceId, status])
+  @@map("automations")
+}
+
+model AutomationVersion {
+  id            String      @id @default(uuid())
+  automationId  String
+  versionNumber Int
+  definition    Json        // Canonical Workflow AST (Nodes, Edges, Policies, Triggers)
+  inputSchema   Json?       // JSON Schema for workflow inputs
+  outputSchema  Json?       // JSON Schema for workflow outputs
+  changeSummary String?     // Explanation of changes between versions
+  authorId      String?
+  automation    Automation  @relation("AllVersions", fields: [automationId], references: [id], onDelete: Cascade)
+  activeFor     Automation? @relation("ActiveVersion")
+  runs          Run[]
+  createdAt     DateTime    @default(now())
+
+  @@unique([automationId, versionNumber])
+  @@index([automationId])
+  @@map("automation_versions")
+}
+
+// ============================================================================
+// EXECUTION & RUNS
+// ============================================================================
+
+enum RunStatus {
+  CREATED
+  QUEUED
+  RUNNING
+  WAITING_FOR_TIMER
+  WAITING_FOR_APPROVAL
+  WAITING_FOR_EVENT
+  RETRYING
+  PAUSED
+  COMPLETED
+  FAILED
+  CANCELLED
+  COMPENSATING
+  COMPENSATED
+}
+
+model Run {
+  id                  String            @id @default(uuid())
+  workspaceId         String
+  automationId        String
+  automationVersionId String
+  status              RunStatus         @default(CREATED)
+  triggerType         String            // WEBHOOK, SCHEDULE, MANUAL, API, EVENT
+  triggerInput        Json?             // Input payload that triggered the run
+  output              Json?             // Final workflow output
+  error               Json?             // Structured error details if failed
+  correlationId       String            @unique @default(uuid())
+  temporalWorkflowId  String?           @unique
+  temporalRunId       String?
+  idempotencyKey      String?           @unique
+  startedAt           DateTime?
+  completedAt         DateTime?
+  workspace           Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  automation          Automation        @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  version             AutomationVersion @relation(fields: [automationVersionId], references: [id], onDelete: Cascade)
+  steps               RunStep[]
+  approvals           Approval[]
+  events              RunEvent[]
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([automationId, createdAt])
+  @@index([correlationId])
+  @@map("runs")
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  WAITING
+  COMPLETED
+  FAILED
+  SKIPPED
+  CANCELLED
+  COMPENSATED
+}
+
+model RunStep {
+  id          String     @id @default(uuid())
+  runId       String
+  nodeId      String     // Stable immutable node ID in the workflow AST
+  nodeName    String
+  nodeType    String     // TRIGGER, ACTION, AGENT, CONDITION, WAIT, etc.
+  status      StepStatus @default(PENDING)
+  attempt     Int        @default(1)
+  input       Json?
+  output      Json?
+  error       Json?
+  startedAt   DateTime?
+  completedAt DateTime?
+  durationMs  Int?
+  run         Run        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([runId, nodeId])
+  @@index([runId, status])
+  @@map("run_steps")
+}
+
+model RunEvent {
+  id        String   @id @default(uuid())
+  runId     String
+  eventType String   // e.g. automation.step.started, automation.approval.required
+  payload   Json
+  timestamp DateTime @default(now())
+  run       Run      @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, timestamp])
+  @@map("run_events")
+}
+
+// ============================================================================
+// HUMAN APPROVALS & POLICIES
+// ============================================================================
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+model Approval {
+  id          String             @id @default(uuid())
+  workspaceId String
+  runId       String
+  stepId      String
+  title       String
+  description String?
+  status      ApprovalStatus     @default(PENDING)
+  riskLevel   String             // LOW, MEDIUM, HIGH, CRITICAL
+  contextData Json               // Data snapshot presented to approver
+  policyRule  String?            // The business policy rule that triggered this approval
+  expiresAt   DateTime?
+  workspace   Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  run         Run                @relation(fields: [runId], references: [id], onDelete: Cascade)
+  decisions   ApprovalDecision[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([runId])
+  @@map("approvals")
+}
+
+model ApprovalDecision {
+  id         String   @id @default(uuid())
+  approvalId String
+  userId     String
+  decision   String   // APPROVED, REJECTED, CHANGES_REQUESTED
+  comment    String?
+  approval   Approval @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  decidedAt  DateTime @default(now())
+
+  @@index([approvalId])
+  @@map("approval_decisions")
+}
+
+model Policy {
+  id          String    @id @default(uuid())
+  workspaceId String
+  name        String
+  description String?
+  rules       Json      // Structured rules: monetary limits, forbidden tools, working hours
+  isEnabled   Boolean   @default(true)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, isEnabled])
+  @@map("policies")
+}
+
+// ============================================================================
+// AGENTS & TOOLS
+// ============================================================================
+
+model Agent {
+  id            String    @id @default(uuid())
+  workspaceId   String
+  name          String
+  purpose       String
+  systemPrompt  String
+  modelProvider String    // openai, anthropic, google
+  modelName     String    // gpt-4o, claude-3-5-sonnet, gemini-1.5-pro
+  autonomyLevel Int       @default(3) // Level 0 to 5
+  maxTokens     Int       @default(4096)
+  temperature   Float     @default(0.2)
+  toolsConfig   Json      // Allowed tools and granular authorization policies
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@map("agents")
+}
+
+// ============================================================================
+// CONNECTORS & CREDENTIAL VAULT (ENCRYPTED)
+// ============================================================================
+
+enum ConnectorAuthType {
+  OAUTH2
+  API_KEY
+  BEARER
+  BASIC
+  CUSTOM
+}
+
+model ConnectorAccount {
+  id            String            @id @default(uuid())
+  workspaceId   String
+  connectorId   String            // gmail, slack, salesforce, hubspot, custom_api
+  name          String
+  authType      ConnectorAuthType
+  encryptedData String            // AES-256-GCM envelope-encrypted credentials
+  keyId         String            // Reference identifier to KMS/Master encryption key
+  scopes        String[]
+  expiresAt     DateTime?
+  status        String            @default("CONNECTED") // CONNECTED, EXPIRED, ERROR
+  lastTestedAt  DateTime?
+  workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([workspaceId, connectorId])
+  @@map("connector_accounts")
+}
+
+model Secret {
+  id             String    @id @default(uuid())
+  workspaceId    String
+  key            String
+  encryptedValue String    // Envelope-encrypted value
+  keyId          String
+  environment    String    @default("DEVELOPMENT") // DEVELOPMENT, TEST, STAGING, PRODUCTION
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([workspaceId, key, environment])
+  @@index([workspaceId])
+  @@map("secrets")
+}
+
+model Variable {
+  id          String    @id @default(uuid())
+  workspaceId String
+  key         String
+  value       String
+  environment String    @default("DEVELOPMENT")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workspaceId, key, environment])
+  @@map("variables")
+}
+
+// ============================================================================
+// AUDIT TRAILS & OBSERVABILITY
+// ============================================================================
+
+model AuditLog {
+  id            String    @id @default(uuid())
+  workspaceId   String
+  actorId       String?
+  actorType     String    // USER, SYSTEM, AGENT, API_KEY
+  action        String    // automation.publish, approval.decide, secret.create, etc.
+  targetType    String    // Automation, Run, Secret, Connector
+  targetId      String
+  beforeState   Json?
+  afterState    Json?
+  ipAddress     String?
+  correlationId String?
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user          User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+
+  @@index([workspaceId, createdAt])
+  @@index([targetType, targetId])
+  @@index([correlationId])
+  @@map("audit_logs")
 }

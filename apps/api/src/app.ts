@@ -3,8 +3,10 @@ import { randomUUID } from "node:crypto";
 import { createLogger, createChildLogger } from "@agentic/logger";
 import { formatErrorResponse, NotFoundError } from "@agentic/shared";
 import { registerSecurityPlugins } from "./plugins/security.js";
+import { tenancyPlugin } from "./plugins/tenancy.js";
 import { errorHandler } from "./errors/errorHandler.js";
 import { healthRoutes } from "./modules/health/routes.js";
+import { workspaceRoutes } from "./modules/workspaces/routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const rootLogger = createLogger({
@@ -47,8 +49,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     );
   });
 
-  // Register security plugins
+  // Register security & tenancy plugins
   await registerSecurityPlugins(app);
+  await app.register(tenancyPlugin);
 
   // Set centralized not found handler for consistent 404 responses
   app.setNotFoundHandler((request, reply) => {
@@ -72,6 +75,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Register route modules
   await app.register(healthRoutes);
+  await app.register(workspaceRoutes);
 
   return app;
 }

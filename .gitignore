@@ -9,6 +9,8 @@ out/
 .next/
 .turbo/
 *.tsbuildinfo
+generated/
+packages/db/generated/
 
 # Test & coverage
 coverage/
