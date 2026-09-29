@@ -8,11 +8,12 @@ services:
       POSTGRES_PASSWORD: agentic
       POSTGRES_DB: agentic_dev
     ports:
-      - "5432:5432"
+      # Port 5433 isolates our Docker PostgreSQL from any host-installed PostgreSQL on 5432
+      - '5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agentic -d agentic_dev"]
+      test: ['CMD-SHELL', 'pg_isready -U agentic -d agentic_dev']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,70 +23,56 @@ services:
     container_name: agentic-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 5s
       retries: 5
 
-  minio:
-    image: minio/minio:latest
-    container_name: agentic-minio
+  s3-storage:
+    image: adobe/s3mock:latest
+    container_name: agentic-s3
     restart: unless-stopped
-    command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: agentic_minio_admin
-      MINIO_ROOT_PASSWORD: agentic_minio_secret_key
+      initialBuckets: agentic-artifacts
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      # S3 HTTP endpoint on port 9000
+      - '9000:9090'
     volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  minio-create-bucket:
-    image: minio/mc:latest
-    container_name: agentic-minio-setup
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set localminio http://minio:9000 agentic_minio_admin agentic_minio_secret_key;
-      /usr/bin/mc mb --ignore-existing localminio/agentic-artifacts;
-      exit 0;
-      "
+      - s3_data:/root/.s3mock
 
   temporal:
-    image: temporalio/cli:latest
+    image: temporalio/auto-setup:latest
     container_name: agentic-temporal
     restart: unless-stopped
-    command:
-      [
-        "server",
-        "start-dev",
-        "--ip",
-        "0.0.0.0",
-        "--ui-port",
-        "8233",
-        "--db-filename",
-        "/temporal/temporal.db",
-      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: agentic
+      POSTGRES_PWD: agentic
+      POSTGRES_SEEDS: postgres
     ports:
-      - "7233:7233"
-      - "8233:8233"
-    volumes:
-      - temporal_data:/temporal
+      - '7233:7233'
+
+  temporal-ui:
+    image: temporalio/ui:latest
+    container_name: agentic-temporal-ui
+    restart: unless-stopped
+    depends_on:
+      - temporal
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CORS_ORIGINS: http://localhost:8233
+    ports:
+      - '8233:8080'
 
 volumes:
   postgres_data:
   redis_data:
-  minio_data:
-  temporal_data:
+  s3_data:
