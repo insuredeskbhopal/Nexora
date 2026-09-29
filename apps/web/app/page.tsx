@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import { Navbar } from "../components/Navbar";
+import { Footer } from "../components/Footer";
 
 export default function HomePage() {
   const [commandPrompt, setCommandPrompt] = useState("");
-  const [activeTab, setActiveTab] = useState("product");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
 
@@ -23,53 +24,7 @@ export default function HomePage() {
   return (
     <>
       {/* HEADER NAVIGATION */}
-      <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-200">
-        <div className="h-20 max-w-[1280px] mx-auto px-gutter-sm md:px-gutter lg:px-gutter-lg flex items-center justify-between">
-          <div className="w-full flex items-center justify-between px-space-md py-space-xs rounded-full bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_2px_12px_rgba(13,15,18,0.04)] ring-1 ring-outline-variant/30">
-            <div className="flex items-center gap-space-sm">
-              <a className="flex items-center gap-space-xs" href="#">
-                <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center shadow-[0_4px_12px_rgba(37,99,235,0.2)]">
-                  <span className="material-symbols-outlined text-on-primary text-[20px]">hub</span>
-                </div>
-                <span className="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">Nexora</span>
-              </a>
-            </div>
-
-            <nav className="hidden lg:flex items-center gap-space-lg">
-              {["product", "agents", "integrations", "solutions", "developers", "pricing"].map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={`capitalize transition-colors font-label-md text-label-md ${
-                    activeTab === tab ? "text-primary font-semibold" : "text-on-surface-variant hover:text-on-surface"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </nav>
-
-            <div className="flex items-center gap-space-md">
-              <a
-                className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors px-space-xs py-space-2xs"
-                href="#interactive-demo"
-              >
-                Sign in
-              </a>
-              <a
-                className="inline-flex items-center justify-center font-label-md text-label-md bg-primary-container text-on-primary px-space-md py-space-xs rounded-lg shadow-[0_4px_16px_rgba(37,99,235,0.22)] hover:bg-primary hover:shadow-[0_8px_24px_rgba(37,99,235,0.35)] transition-all"
-                href="#build"
-              >
-                Start Building
-              </a>
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
-                <span className="material-symbols-outlined text-[18px]">person</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* MAIN CONTENT */}
       <main className="w-full pt-20 bg-surface relative min-h-screen">
@@ -1067,110 +1022,7 @@ export default function HomePage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="w-full bg-surface-container-low/70 py-space-2xl">
-        <div className="max-w-[1280px] mx-auto px-gutter-sm md:px-gutter lg:px-gutter-lg">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-space-lg mb-space-xl">
-            <div className="col-span-2 md:col-span-4 lg:col-span-2 pr-space-md">
-              <div className="flex items-center gap-space-xs mb-space-sm">
-                <div className="w-6 h-6 rounded bg-primary-container flex items-center justify-center">
-                  <span className="material-symbols-outlined text-on-primary text-[16px]">hub</span>
-                </div>
-                <span className="font-headline-sm text-headline-sm text-on-surface font-semibold">Nexora</span>
-              </div>
-              <p className="font-body-sm text-body-sm text-on-surface-variant max-w-xs">
-                Autonomous operational infrastructure engineered for high-leverage agentic intelligence.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-space-xs">
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface font-semibold mb-space-2xs">
-                Product
-              </span>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Platform
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Autonomous Core
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Workflows
-              </a>
-            </div>
-
-            <div className="flex flex-col gap-space-xs">
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface font-semibold mb-space-2xs">
-                Agents
-              </span>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Orchestration
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Multi-Agent Swarms
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Agent Registry
-              </a>
-            </div>
-
-            <div className="flex flex-col gap-space-xs">
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface font-semibold mb-space-2xs">
-                Developers
-              </span>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Documentation
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                API Reference
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                SDKs &amp; Tools
-              </a>
-            </div>
-
-            <div className="flex flex-col gap-space-xs">
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface font-semibold mb-space-2xs">
-                Company
-              </span>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                About
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Contact
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Pricing
-              </a>
-            </div>
-
-            <div className="flex flex-col gap-space-xs">
-              <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface font-semibold mb-space-2xs">
-                Legal
-              </span>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Privacy Policy
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Terms of Service
-              </a>
-              <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">
-                Security
-              </a>
-            </div>
-          </div>
-
-          <div className="pt-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-sm border-t border-outline-variant/30">
-            <p className="font-body-sm text-body-sm text-on-surface-variant">
-              &copy; Nexora Technologies Inc. Turn instructions into autonomous execution.
-            </p>
-            <div className="flex items-center gap-space-md">
-              <span className="inline-flex items-center gap-space-2xs font-label-sm text-label-sm text-on-surface-variant">
-                <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
-                All Systems Operational
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }
