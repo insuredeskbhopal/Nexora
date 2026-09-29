@@ -31,7 +31,7 @@ export default function HomePage() {
                 <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center shadow-[0_4px_12px_rgba(37,99,235,0.2)]">
                   <span className="material-symbols-outlined text-on-primary text-[20px]">hub</span>
                 </div>
-                <span className="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Nexora</span>
+                <span className="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">Nexora</span>
               </a>
             </div>
 
@@ -172,7 +172,7 @@ export default function HomePage() {
                         </span>
                         <span className="font-label-sm text-label-sm text-primary font-semibold uppercase">Trigger</span>
                       </div>
-                      <h4 className="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-[22px] mb-space-2xs font-bold">
+                      <h4 className="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-[22px] mb-space-2xs font-semibold">
                         New Lead Event
                       </h4>
                       <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -192,7 +192,7 @@ export default function HomePage() {
                         </span>
                         <span className="font-label-sm text-label-sm text-primary font-semibold uppercase">Multi-Agent</span>
                       </div>
-                      <h4 className="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-[22px] mb-space-2xs font-bold">
+                      <h4 className="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-[22px] mb-space-2xs font-semibold">
                         Deep Enrichment
                       </h4>
                       <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -212,7 +212,7 @@ export default function HomePage() {
                         </span>
                         <span className="font-label-sm text-label-sm text-primary font-semibold uppercase">CRM &amp; Comms</span>
                       </div>
-                      <h4 className="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-[22px] mb-space-2xs font-bold">
+                      <h4 className="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-[22px] mb-space-2xs font-semibold">
                         Routing &amp; WhatsApp
                       </h4>
                       <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -232,7 +232,7 @@ export default function HomePage() {
                         </span>
                         <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase">SLA Monitor</span>
                       </div>
-                      <h4 className="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-[22px] mb-space-2xs font-bold">
+                      <h4 className="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-[22px] mb-space-2xs font-semibold">
                         Stateful Escalate
                       </h4>
                       <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -367,12 +367,12 @@ export default function HomePage() {
                 <div className="p-space-lg rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-space-md">
-                      <span className="font-headline-md text-headline-md font-bold text-primary-container">01</span>
+                      <span className="font-headline-md text-headline-md font-semibold text-primary-container">01</span>
                       <span className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface">
                         <span className="material-symbols-outlined text-[18px]">chat</span>
                       </span>
                     </div>
-                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-space-xs font-bold">Describe</h3>
+                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-space-xs font-semibold">Describe</h3>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">
                       Tell Nexora the outcome in natural human language. You describe what business success looks like without writing boilerplate or pseudocode.
                     </p>
@@ -386,12 +386,12 @@ export default function HomePage() {
                 <div className="p-space-lg rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-space-md">
-                      <span className="font-headline-md text-headline-md font-bold text-primary-container">02</span>
+                      <span className="font-headline-md text-headline-md font-semibold text-primary-container">02</span>
                       <span className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface">
                         <span className="material-symbols-outlined text-[18px]">schema</span>
                       </span>
                     </div>
-                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-space-xs font-bold">Plan</h3>
+                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-space-xs font-semibold">Plan</h3>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">
                       Nexora designs the full architecture, logic tree, state machine, failover paths, and selects the optimal tools and APIs for zero downtime.
                     </p>
@@ -405,12 +405,12 @@ export default function HomePage() {
                 <div className="p-space-lg rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-space-md">
-                      <span className="font-headline-md text-headline-md font-bold text-primary-container">03</span>
+                      <span className="font-headline-md text-headline-md font-semibold text-primary-container">03</span>
                       <span className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface">
                         <span className="material-symbols-outlined text-[18px]">verified_user</span>
                       </span>
                     </div>
-                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-space-xs font-bold">Review</h3>
+                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-space-xs font-semibold">Review</h3>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">
                       Inspect the transparent execution plan, agent delegations, and configure exact human approval safeguards before anything commits.
                     </p>
@@ -424,12 +424,12 @@ export default function HomePage() {
                 <div className="p-space-lg rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-space-md">
-                      <span className="font-headline-md text-headline-md font-bold text-primary-container">04</span>
+                      <span className="font-headline-md text-headline-md font-semibold text-primary-container">04</span>
                       <span className="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-md">
                         <span className="material-symbols-outlined text-[18px]">bolt</span>
                       </span>
                     </div>
-                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-space-xs font-bold">Execute</h3>
+                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-space-xs font-semibold">Execute</h3>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">
                       Nexora deploys, monitors, handles network retries, and maintains stateful memory indefinitely across weeks and months of real operation.
                     </p>
@@ -464,7 +464,7 @@ export default function HomePage() {
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between pb-space-lg mb-space-lg bg-surface-container-low p-space-md rounded-xl">
                   <div>
                     <div className="flex items-center gap-space-xs mb-space-2xs">
-                      <span className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                      <span className="font-headline-sm text-headline-sm font-semibold text-on-surface">
                         14-Day Global Tender &amp; RFQ Pipeline
                       </span>
                       <span className="px-space-xs py-space-2xs rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold">
@@ -586,7 +586,7 @@ export default function HomePage() {
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold mb-space-2xs block">
                   Swarm Coordination
                 </span>
-                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-sm font-bold">
+                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-sm font-semibold">
                   Agents that work together.
                 </h2>
                 <p className="font-body-lg text-body-lg text-on-surface-variant mb-space-lg">
@@ -626,7 +626,7 @@ export default function HomePage() {
                   <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center mb-space-2xs shadow-md">
                     <span className="material-symbols-outlined text-on-primary text-[24px]">hub</span>
                   </div>
-                  <span className="font-label-sm text-label-sm font-bold tracking-tight">Nexora Core</span>
+                  <span className="font-label-sm text-label-sm font-semibold tracking-tight">Nexora Core</span>
                   <span className="font-code-inline text-[10px] text-outline-variant">ORCHESTRATOR</span>
                 </div>
 
@@ -634,7 +634,7 @@ export default function HomePage() {
                   <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center gap-space-xs mb-space-2xs">
                       <span className="material-symbols-outlined text-primary text-[20px]">travel_explore</span>
-                      <span className="font-headline-sm text-headline-sm text-[15px] font-bold text-on-surface">Research Agent</span>
+                      <span className="font-headline-sm text-headline-sm text-[15px] font-semibold text-on-surface">Research Agent</span>
                     </div>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">Market &amp; entity intelligence across web and internal docs.</p>
                   </div>
@@ -642,7 +642,7 @@ export default function HomePage() {
                   <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center gap-space-xs mb-space-2xs">
                       <span className="material-symbols-outlined text-primary text-[20px]">account_balance</span>
-                      <span className="font-headline-sm text-headline-sm text-[15px] font-bold text-on-surface">Finance Agent</span>
+                      <span className="font-headline-sm text-headline-sm text-[15px] font-semibold text-on-surface">Finance Agent</span>
                     </div>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">Ledger matching, invoices &amp; balance threshold audits.</p>
                   </div>
@@ -650,7 +650,7 @@ export default function HomePage() {
                   <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center gap-space-xs mb-space-2xs">
                       <span className="material-symbols-outlined text-primary text-[20px]">description</span>
-                      <span className="font-headline-sm text-headline-sm text-[15px] font-bold text-on-surface">Document Agent</span>
+                      <span className="font-headline-sm text-headline-sm text-[15px] font-semibold text-on-surface">Document Agent</span>
                     </div>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">Deep contract parsing and structured JSON extraction.</p>
                   </div>
@@ -658,7 +658,7 @@ export default function HomePage() {
                   <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center gap-space-xs mb-space-2xs">
                       <span className="material-symbols-outlined text-primary text-[20px]">database</span>
-                      <span className="font-headline-sm text-headline-sm text-[15px] font-bold text-on-surface">Data Agent</span>
+                      <span className="font-headline-sm text-headline-sm text-[15px] font-semibold text-on-surface">Data Agent</span>
                     </div>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">Reconciles mutations across SQL, Mongo, and analytics warehouses.</p>
                   </div>
@@ -666,7 +666,7 @@ export default function HomePage() {
                   <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all sm:col-span-2 lg:col-span-1">
                     <div className="flex items-center gap-space-xs mb-space-2xs">
                       <span className="material-symbols-outlined text-primary text-[20px]">shield</span>
-                      <span className="font-headline-sm text-headline-sm text-[15px] font-bold text-on-surface">Verification Agent</span>
+                      <span className="font-headline-sm text-headline-sm text-[15px] font-semibold text-on-surface">Verification Agent</span>
                     </div>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">Fraud screening, AML adherence, and audit validations.</p>
                   </div>
@@ -682,7 +682,7 @@ export default function HomePage() {
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold mb-space-2xs block">
                   Unified Ecosystem
                 </span>
-                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-xs font-bold">
+                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-xs font-semibold">
                   Works across the tools your business already uses.
                 </h2>
                 <p className="font-body-md text-body-md text-on-surface-variant">
@@ -728,7 +728,7 @@ export default function HomePage() {
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold mb-space-2xs block">
                   Deterministic Safeguards
                 </span>
-                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-xs font-bold">
+                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-xs font-semibold">
                   Autonomous where it should be. Human when it matters.
                 </h2>
                 <p className="font-body-lg text-body-lg text-on-surface-variant">
@@ -749,7 +749,7 @@ export default function HomePage() {
                   <div className="space-y-space-md mb-space-xl">
                     <div>
                       <span className="font-label-sm text-label-sm text-on-surface-variant">Payment Authorization Request</span>
-                      <div className="font-headline-xl text-headline-xl text-on-surface font-bold tracking-tight">₹4,82,000</div>
+                      <div className="font-headline-xl text-headline-xl text-on-surface font-semibold tracking-tight">₹4,82,000</div>
                     </div>
                     <div className="grid grid-cols-2 gap-space-sm">
                       <div className="p-space-sm rounded-lg bg-surface">
@@ -793,7 +793,7 @@ export default function HomePage() {
                 {/* Right: Governance Policy Matrix */}
                 <div className="lg:col-span-6 p-space-xl rounded-2xl bg-surface-container-low shadow-sm">
                   <div className="flex items-center justify-between mb-space-lg">
-                    <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">Active Governance Policy Matrix</h3>
+                    <h3 className="font-headline-sm text-headline-sm font-semibold text-on-surface">Active Governance Policy Matrix</h3>
                     <span className="font-code-inline text-code-inline text-primary">Ruleset: Enterprise Sovereign</span>
                   </div>
                   <div className="space-y-space-sm">
@@ -842,7 +842,7 @@ export default function HomePage() {
                         <span className="material-symbols-outlined text-error text-[20px]">delete_forever</span>
                         <span className="font-body-md text-body-md font-medium text-on-surface">Production DB Table Drop or Truncate</span>
                       </div>
-                      <span className="px-space-xs py-space-2xs rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+                      <span className="px-space-xs py-space-2xs rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
                         Hard Blocked
                       </span>
                     </div>
@@ -859,7 +859,7 @@ export default function HomePage() {
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold mb-space-2xs block">
                   Self-Healing Execution
                 </span>
-                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-xs font-bold">
+                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-xs font-semibold">
                   It doesn’t just run. It knows when to stop.
                 </h2>
                 <p className="font-body-lg text-body-lg text-on-surface-variant">
@@ -873,9 +873,9 @@ export default function HomePage() {
                     <div>
                       <div className="flex items-center gap-space-xs text-error mb-space-sm">
                         <span className="material-symbols-outlined text-[20px]">pause_circle</span>
-                        <span className="font-label-sm text-label-sm font-bold uppercase tracking-wider">Step 1: Graceful Serialization</span>
+                        <span className="font-label-sm text-label-sm font-semibold uppercase tracking-wider">Step 1: Graceful Serialization</span>
                       </div>
-                      <h4 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-2xs">Salesforce Token Expired</h4>
+                      <h4 className="font-headline-sm text-headline-sm text-on-surface font-semibold mb-space-2xs">Salesforce Token Expired</h4>
                       <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
                         Workflow safely paused before step execution. All memory variables, lead telemetry, and research payloads serialized to immutable storage.
                       </p>
@@ -899,9 +899,9 @@ export default function HomePage() {
                     <div>
                       <div className="flex items-center gap-space-xs text-primary mb-space-sm">
                         <span className="material-symbols-outlined text-[20px]">play_circle</span>
-                        <span className="font-label-sm text-label-sm font-bold uppercase tracking-wider">Step 2: Resumption</span>
+                        <span className="font-label-sm text-label-sm font-semibold uppercase tracking-wider">Step 2: Resumption</span>
                       </div>
-                      <h4 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-space-2xs">Resumed from Exact Point</h4>
+                      <h4 className="font-headline-sm text-headline-sm text-on-surface font-semibold mb-space-2xs">Resumed from Exact Point</h4>
                       <p className="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
                         Connection authenticated. Nexora deserialized state and continued Step 4 (CRM Sync) instantly without re-running earlier steps.
                       </p>
@@ -929,7 +929,7 @@ export default function HomePage() {
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold mb-space-2xs block">
                   Bimodal Ergonomics
                 </span>
-                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-xs font-bold">
+                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-space-xs font-semibold">
                   Power without complexity.
                 </h2>
                 <p className="font-body-lg text-body-lg text-on-surface-variant">
@@ -941,7 +941,7 @@ export default function HomePage() {
                 <div className="p-space-xl rounded-2xl bg-surface-container-lowest shadow-lg flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-space-md">
-                      <span className="font-headline-sm text-headline-sm text-on-surface font-bold">Simple when you want it.</span>
+                      <span className="font-headline-sm text-headline-sm text-on-surface font-semibold">Simple when you want it.</span>
                       <span className="px-space-xs py-space-2xs rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm">
                         No-Code Canvas
                       </span>
@@ -965,7 +965,7 @@ export default function HomePage() {
                 <div className="p-space-xl rounded-2xl bg-surface-container-lowest shadow-lg flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-space-md">
-                      <span className="font-headline-sm text-headline-sm text-on-surface font-bold">Powerful when you need it.</span>
+                      <span className="font-headline-sm text-headline-sm text-on-surface font-semibold">Powerful when you need it.</span>
                       <span className="px-space-xs py-space-2xs rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-semibold">
                         Dev &amp; CLI Mode
                       </span>
@@ -1001,7 +1001,7 @@ export default function HomePage() {
               <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold mb-space-sm block">
                 Start In Seconds
               </span>
-              <h2 className="font-headline-xl text-headline-xl md:text-display text-on-surface mb-space-md max-w-3xl tracking-tight font-bold">
+              <h2 className="font-headline-xl text-headline-xl md:text-display text-on-surface mb-space-md max-w-3xl tracking-tight font-semibold">
                 What do you want Nexora to run?
               </h2>
               <p className="font-body-xl text-body-xl text-on-surface-variant mb-space-2xl max-w-xl">
@@ -1075,7 +1075,7 @@ export default function HomePage() {
                 <div className="w-6 h-6 rounded bg-primary-container flex items-center justify-center">
                   <span className="material-symbols-outlined text-on-primary text-[16px]">hub</span>
                 </div>
-                <span className="font-headline-sm text-headline-sm text-on-surface font-bold">Nexora</span>
+                <span className="font-headline-sm text-headline-sm text-on-surface font-semibold">Nexora</span>
               </div>
               <p className="font-body-sm text-body-sm text-on-surface-variant max-w-xs">
                 Autonomous operational infrastructure engineered for high-leverage agentic intelligence.
