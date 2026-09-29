@@ -103,3 +103,10 @@ export const createAutomationSchema = z.object({
   environment: environmentSchema.default('DEVELOPMENT'),
 });
 export type CreateAutomationInput = z.infer<typeof createAutomationSchema>;
+
+export const rollbackSchema = z.object({
+  targetVersionNumber: z.number().int().positive(),
+  reason: z.string().max(500).optional(),
+});
+export type RollbackInput = z.infer<typeof rollbackSchema>;
+
