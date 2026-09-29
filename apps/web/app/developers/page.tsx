@@ -82,7 +82,7 @@ nexora run ./pipeline.json --dry-run --verbose`;
     <>
       <Navbar currentTab="Developers" />
 
-      <main className="w-full pt-20 bg-surface relative min-h-screen">
+      <main className="w-full pt-20 bg-transparent relative min-h-screen">
         {/* HERO */}
         <section className="relative w-full overflow-hidden px-gutter-sm md:px-gutter lg:px-gutter-lg pt-space-xl pb-space-3xl">
           <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary-container/10 rounded-full blur-[140px] pointer-events-none -z-10"></div>

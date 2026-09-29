@@ -109,6 +109,7 @@ export const workspaceRoutes: FastifyPluginAsync = async (fastify) => {
         name: m.workspace.name,
         slug: m.workspace.slug,
         description: m.workspace.description,
+        plan: m.workspace.plan,
         role: m.role,
         createdAt: m.workspace.createdAt.toISOString(),
       }));

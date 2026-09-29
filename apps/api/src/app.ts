@@ -6,6 +6,7 @@ import { registerSecurityPlugins } from "./plugins/security.js";
 import { tenancyPlugin } from "./plugins/tenancy.js";
 import { errorHandler } from "./errors/errorHandler.js";
 import { healthRoutes } from "./modules/health/routes.js";
+import { authRoutes } from "./modules/auth/routes.js";
 import { workspaceRoutes } from "./modules/workspaces/routes.js";
 import { automationRoutes } from "./modules/automations/routes.js";
 import { runRoutes } from "./modules/runs/routes.js";
@@ -79,6 +80,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Register route modules
   await app.register(healthRoutes);
+  await app.register(authRoutes);
   await app.register(workspaceRoutes);
   await app.register(automationRoutes);
   await app.register(runRoutes);

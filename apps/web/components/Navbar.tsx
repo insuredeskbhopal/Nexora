@@ -9,6 +9,7 @@ interface NavbarProps {
 }
 
 const NAV_ITEMS = [
+  { label: "Dashboard", href: "/dashboard" },
   { label: "Product", href: "/product" },
   { label: "Agents", href: "/agents" },
   { label: "Integrations", href: "/integrations" },
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { label: "Developers", href: "/developers" },
   { label: "Pricing", href: "/pricing" },
 ];
+
 
 export function Navbar({ currentTab }: NavbarProps) {
   const pathname = usePathname();
@@ -74,17 +76,18 @@ export function Navbar({ currentTab }: NavbarProps) {
           <div className="flex items-center gap-space-md">
             <Link
               className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors px-space-xs py-space-2xs hidden sm:inline-block"
-              href="/#build"
+              href="/signin"
             >
               Sign in
             </Link>
             <Link
               className="inline-flex items-center justify-center gap-1 font-label-md text-label-md bg-primary-container text-on-primary px-space-md py-space-xs rounded-lg shadow-[0_4px_16px_rgba(37,99,235,0.22)] hover:bg-primary hover:shadow-[0_8px_24px_rgba(37,99,235,0.35)] transition-all"
-              href="/#build"
+              href="/signin"
             >
               <span>Start Building</span>
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </Link>
+
             
             {/* Mobile Hamburger Toggle */}
             <button
@@ -124,13 +127,21 @@ export function Navbar({ currentTab }: NavbarProps) {
             })}
             <div className="pt-space-xs border-t border-outline-variant/20 flex flex-col gap-space-xs">
               <Link
-                href="/#build"
+                href="/signin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-space-xs rounded-lg text-on-surface hover:bg-surface-container-low font-label-md text-label-md border border-outline-variant/20"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/signin"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-space-xs rounded-lg bg-primary-container text-on-primary font-label-md text-label-md"
               >
                 Start Building Free
               </Link>
             </div>
+
           </div>
         </div>
       )}

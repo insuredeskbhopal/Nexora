@@ -27,7 +27,7 @@ export default function HomePage() {
       <Navbar />
 
       {/* MAIN CONTENT */}
-      <main className="w-full pt-20 bg-surface relative min-h-screen">
+      <main className="w-full pt-20 bg-transparent relative min-h-screen">
         <div className="flex flex-col w-full">
           {/* SECTION 1: HERO & SPATIAL EXECUTION MAP */}
           <section className="relative w-full overflow-hidden px-gutter-sm md:px-gutter lg:px-gutter-lg pt-space-xl pb-space-3xl">

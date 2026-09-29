@@ -14,11 +14,15 @@
   html, body {
     margin: 0;
     padding: 0;
-    background-color: #f9f9ff;
+    background-color: #f6f8fc;
     color: #161c26;
   }
   body {
     overscroll-behavior: none;
+    background-color: #f6f8fc;
+  }
+  main {
+    background-color: transparent !important;
   }
   main > :first-child {
     margin-top: 0 !important;
@@ -27,6 +31,37 @@
     margin-bottom: 0 !important;
   }
 }
+
+@layer utilities {
+  /* Ambient Modern Technical Blueprint Grid */
+  .bg-grid-pattern {
+    background-size: 36px 36px;
+    background-image: 
+      linear-gradient(to right, rgba(15, 23, 42, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+  }
+
+  /* Fine Dot Matrix Overlay */
+  .bg-dot-pattern {
+    background-size: 24px 24px;
+    background-image: radial-gradient(rgba(0, 74, 198, 0.12) 1px, transparent 1px);
+  }
+
+  /* Subtle Ambient Radial Lighting Mesh */
+  .bg-ambient-mesh {
+    background-image: 
+      radial-gradient(circle at 50% 120px, rgba(37, 99, 235, 0.09) 0%, transparent 650px),
+      radial-gradient(circle at 85% 700px, rgba(0, 117, 159, 0.06) 0%, transparent 550px),
+      radial-gradient(circle at 15% 1500px, rgba(37, 99, 235, 0.05) 0%, transparent 550px);
+  }
+}
+
+/* Force main elements to be transparent to display the engineering grid canvas */
+main,
+main.bg-surface {
+  background-color: transparent !important;
+}
+
 
 ::-webkit-scrollbar {
   display: none;

@@ -390,6 +390,50 @@ export const automationRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * PATCH /v1/workspaces/:workspaceId/automations/:id/status
+   * Update automation status (e.g. ACTIVE, PAUSED, ARCHIVED).
+   */
+  fastify.patch('/v1/workspaces/:workspaceId/automations/:id/status', {
+    preHandler: [fastify.enforceTenancy('automation.edit')],
+    handler: async (request, reply) => {
+      const tenancy = request.tenancy!;
+      const { id } = request.params as { id: string };
+      const { status } = (request.body as { status?: string }) || {};
+
+      if (!status || !['DRAFT', 'ACTIVE', 'PAUSED', 'ARCHIVED'].includes(status)) {
+        throw new ValidationError('Invalid status. Must be DRAFT, ACTIVE, PAUSED, or ARCHIVED.');
+      }
+
+      const automation = await prisma.automation.findFirst({
+        where: { id, workspaceId: tenancy.workspaceId },
+      });
+
+      if (!automation) {
+        throw new NotFoundError(`Automation '${id}' not found`);
+      }
+
+      const updated = await prisma.automation.update({
+        where: { id },
+        data: { status: status as any },
+      });
+
+      await recordAuditLog({
+        workspaceId: tenancy.workspaceId,
+        actorId: tenancy.userId,
+        action: 'automation.status_updated',
+        targetType: 'automation',
+        targetId: id,
+        beforeState: { status: automation.status },
+        afterState: { status: updated.status },
+        ipAddress: request.ip,
+        correlationId: request.requestId,
+      });
+
+      return reply.send({ automation: updated });
+    },
+  });
+
+  /**
    * POST /v1/workspaces/:workspaceId/automations/:id/rollback
    * Rollback to a previous immutable version snapshot.
    */

@@ -35,7 +35,7 @@ export async function registerSecurityPlugins(app: FastifyInstance) {
 
   // 3. Rate limiting baseline
   await app.register(rateLimit, {
-    max: 200,
+    max: process.env.NODE_ENV === "production" ? 200 : 10000,
     timeWindow: "1 minute",
   });
 }
