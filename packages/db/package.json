@@ -1,0 +1,36 @@
+{
+  "name": "@agentic/db",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "prisma generate",
+    "generate": "prisma generate",
+    "migrate": "tsx scripts/safe-migrate.ts deploy",
+    "migrate:dev": "tsx scripts/safe-migrate.ts dev",
+    "studio": "prisma studio"
+  },
+  "dependencies": {
+    "@agentic/config": "workspace:*",
+    "@agentic/logger": "workspace:*",
+    "@agentic/shared": "workspace:*",
+    "@prisma/client": "^6.4.1",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "prisma": "^6.4.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.7"
+  }
+}
